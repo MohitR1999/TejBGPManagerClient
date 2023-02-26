@@ -26,5 +26,6 @@ class App {
         this.bgpTreeCell = this.sidebar.cells("bgp_config_tree");
         this.bgpGridCell = this.sidebar.cells("bgp_config_grid");
         this.bgpTree = new BGPTree(this.bgpTreeCell);
+        this.bgpGrid = new BGPGrid(this.bgpGridCell);
     }
 }
