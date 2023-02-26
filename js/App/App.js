@@ -9,13 +9,13 @@ const SIDEBAR_CONFIG = {
             id : "bgp_config_tree",
             text : "BGP Configuration (Tree Structure)",
             icon : "res/icons/hub_filled.svg",
-            selected : true
         },
-
+        
         {
             id : "bgp_config_grid",
             text : "BGP Configuration (Grid Structure)",
             icon : "res/icons/settings_ethernet_fill.svg",
+            selected : true
         }
     ]
 };
