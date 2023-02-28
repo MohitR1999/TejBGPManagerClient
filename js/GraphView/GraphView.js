@@ -7,6 +7,6 @@ class GraphView {
         this.layout = parentCell.attachLayout({
             pattern : "1C"
         });
-        this.graph = new Graph("Manage IP MPLS", "graphView", this.layout.cells("a"));
+        this.graph = new Graph("Manage IP MPLS", "graphView", this.layout.cells("a"), `${BASE_SERVER_URL}/graph/data`);
     }
 }

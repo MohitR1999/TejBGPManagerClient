@@ -3,13 +3,16 @@ class Graph {
      * This function creates a graph and returns an instance of it
      * @param {String} context The context of the graph
      * @param {String} parentID The HTML element ID where the graph would be attached
-     * @param {Object} parentLayoutCell The DHTMLX Cell where this graph would be attached    
+     * @param {Object} parentLayoutCell The DHTMLX Cell where this graph would be attached
+     * @param {String} graphDataUrl The URL to fetch data for the graph    
      */
-    constructor(context, parentID, parentLayoutCell) {
+    constructor(context, parentID, parentLayoutCell, graphDataUrl) {
         // We first attach the DHTMLX components to the graph, then we
         // attach the cytoscape.js graph. We will only assign values here
         // We will populate the cells in init function
         this.context = context;
+        this.nodeWidth = 50;
+        this.nodeHeight = 50;
         this.layout = parentLayoutCell.attachLayout({
             pattern: "2E"
         });
@@ -21,13 +24,16 @@ class Graph {
         // cells of the topology view
         this.topologyCell = this.layout.cells("a");
         this.bottomToolbarCell = this.layout.cells("b");
-        
+
         // placeholders for toolbars
         this.topologyTopToolbar = null;
         this.topologyBottomToolbar = null;
-        
+
         // placeholder for graph
         this.graph = null;
+
+        // URL for graph data
+        this.graphDataUrl = graphDataUrl;
 
         // hide headers of all cells as we don't need them
         this.topologyCell.hideHeader();
@@ -41,12 +47,29 @@ class Graph {
     }
 
     /**
+     * Sets the URL for 
+     * @param {String} url The url from which graph will populate its data 
+     */
+    setGraphDataUrl(url) {
+        this.graphDataUrl = url;
+    }
+
+    /**
      * Responsible for initializing all the graph components
+     * AND starting the populating process
      */
     init() {
         this.initTopologyTopToolbar();
         this.initTopologyBottomToolbar();
         this.initGraph();
+        this.populate();
+    }
+
+    /**
+     * Responsible for populating the data
+     */
+    populate() {
+        this.populateGraph();
     }
 
     /**
@@ -55,6 +78,63 @@ class Graph {
     initGraph() {
         // Attach the div to be used for cytoscape and initialize it
         this.topologyCell.attachObject(this.topologyParentDivId);
+        // calculate the number of columns based on the node width and add some extra offset for padding
+        const columns = Math.floor(this.innerWidth / this.nodeWidth + 100);
+        this.graph = cytoscape({
+            container: document.getElementById(this.topologyParentDivId),
+            hideEdgesOnViewport: true,
+            textureOnViewport: true,
+            pixelRatio: 1,
+            wheelSensitivity: 0.50,
+            fit: false,
+            minZoom: 0.50,
+            maxZoom: 3,
+            layout: {
+                name: 'grid',
+                cols: columns
+            },
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'background-image': '/res/icons/router-blue.png',
+                        'width' : `${this.nodeWidth}px`,
+                        'height' : `${this.nodeHeight}px`,
+                        'background-fit' : 'cover',
+                        'background-repeat' : 'no-repeat',
+                        'background-clip' : 'none',
+                        'background-opacity' : '0',
+                        'label': 'data(label)',
+                        'min-zoomed-font-size': '12px',
+                        'font-size' : '12px',
+                        'color' : '#0287d0'
+                    }
+                },
+
+                {
+                    selector : 'core',
+                    style : {
+                        'active-bg-color' : '#0287d0',
+                        'active-bg-opacity' : '0.2'
+                    }
+                },
+
+                {
+                    selector: 'node:selected',
+                    style: {
+                        'background-image': '/res/icons/router-green.png',
+                        'color' : '#02d053'
+                    }
+                },
+
+                {
+                    selector: 'edge',
+                    style: {
+                        'curve-style': 'haystack'
+                    }
+                }
+            ]
+        });
     }
 
     /**
@@ -65,7 +145,7 @@ class Graph {
         this.topologyTopToolbar.setIconSize(18);
         this.initTopologyTopToolbarButtons();
     }
-    
+
     initTopologyBottomToolbar() {
         this.topologyBottomToolbar = this.bottomToolbarCell.attachToolbar();
         // setting height of bottom cell same as that of toolbar for every screen size
@@ -83,9 +163,9 @@ class Graph {
         const sliderId = "zoomSlider";
         const pos = this.bottomItemsIndex++;
         const len = this.innerWidth * 0.15;
-        const minValue = 0;
-        const maxValue = 100;
-        const nowValue = 50;
+        const minValue = -50;
+        const maxValue = 50;
+        const nowValue = 0;
         const minText = "➖";
         const maxText = "➕";
         const tip = "<b>Zoom level</b>: %v";
@@ -105,7 +185,7 @@ class Graph {
         const refreshButtonImgDisabled = "";
         this.topologyTopToolbar.addButton(refreshButtonId, refreshButtonPosition, refreshButtonText, refreshButtonImgEnabled, refreshButtonImgDisabled);
         this.topologyTopToolbar.setItemToolTip(refreshButtonId, "Refresh");
-        
+
         // Add save topology button
         const saveTopologyButtonId = "refresh";
         const saveTopologyButtonPosition = this.topItemsIndex++;
@@ -149,5 +229,27 @@ class Graph {
         this.topologyBottomToolbar.addButton(findButtonId, findButtonPosition, findButtonText, findButtonImgEnabled, findButtonImgDisabled);
         this.topologyBottomToolbar.setItemToolTip(findButtonId, "Search");
         this.topologyBottomToolbar.addSeparator("afterFindBoxSeparator", this.bottomItemsIndex++);
+    }
+
+    populateGraph() {
+        const columns = Math.floor(this.innerWidth / (this.nodeWidth + 100));
+        this.topologyCell.progressOn();
+        fetch(this.graphDataUrl)
+            .then(res => res.json())
+            .then(graphData => {
+                this.graph.startBatch();
+                this.graph.add(graphData);
+                this.graph.endBatch();
+                const layout = this.graph.layout({
+                    name: 'grid',
+                    cols: columns,
+                    fit: false
+                });
+                layout.run();
+                this.topologyCell.progressOff();
+            }).catch(err => {
+                console.log(err);
+                this.topologyCell.progressOff();
+            })
     }
 }
