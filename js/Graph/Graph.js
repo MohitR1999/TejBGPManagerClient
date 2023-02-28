@@ -13,6 +13,28 @@ class Graph {
         this.context = context;
         this.nodeWidth = 50;
         this.nodeHeight = 50;
+        this.TOOLBAR_ITEMS_CONFIG = {
+            BTN_REFRESH : {
+                id : "refresh",
+                text : "",
+                img_enabled : "/res/icons/refresh-blue.png",
+                img_disabled : ""
+            },
+
+            BTN_SAVE_TOPOLOGY : {
+                id : "saveTopology",
+                text : "",
+                img_enabled : "/res/icons/Save-Topology.png",
+                img_disabled : ""
+            },
+
+            BTN_APPLY_GRID_LAYOUT : {
+                id : "applyGridLayout",
+                text : "",
+                img_enabled : "/res/icons/grid.png",
+                img_disabled : ""
+            }
+        }
         this.layout = parentLayoutCell.attachLayout({
             pattern: "2E"
         });
@@ -79,7 +101,8 @@ class Graph {
         // Attach the div to be used for cytoscape and initialize it
         this.topologyCell.attachObject(this.topologyParentDivId);
         // calculate the number of columns based on the node width and add some extra offset for padding
-        const columns = Math.floor(this.innerWidth / this.nodeWidth + 100);
+        const columns = Math.floor(this.innerWidth / (this.nodeWidth + 100));
+        const rows = Math.floor(this.innerHeight / (this.nodeHeight + 100));
         this.graph = cytoscape({
             container: document.getElementById(this.topologyParentDivId),
             hideEdgesOnViewport: true,
@@ -91,7 +114,8 @@ class Graph {
             maxZoom: 3,
             layout: {
                 name: 'grid',
-                cols: columns
+                cols: columns,
+                rows : rows
             },
             style: [
                 {
@@ -144,8 +168,18 @@ class Graph {
         this.topologyTopToolbar = this.layout.attachToolbar();
         this.topologyTopToolbar.setIconSize(18);
         this.initTopologyTopToolbarButtons();
+        this.topologyTopToolbar.attachEvent("onClick", this.topologyTopToolbarOnClickHandler.bind(this));
     }
 
+    topologyTopToolbarOnClickHandler(id) {
+        if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_REFRESH.id) {
+            this.populateGraph();
+        }
+    }
+
+    /**
+     * Responsible for initializing bottom toolbar
+     */
     initTopologyBottomToolbar() {
         this.topologyBottomToolbar = this.bottomToolbarCell.attachToolbar();
         // setting height of bottom cell same as that of toolbar for every screen size
@@ -178,31 +212,31 @@ class Graph {
      */
     initTopologyTopToolbarButtons() {
         // Add refresh button
-        const refreshButtonId = "refresh";
+        const refreshButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_REFRESH.id;
         const refreshButtonPosition = this.topItemsIndex++;
-        const refreshButtonText = "";
-        const refreshButtonImgEnabled = "/res/icons/refresh-blue.png";
-        const refreshButtonImgDisabled = "";
+        const refreshButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_REFRESH.text;
+        const refreshButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_REFRESH.img_enabled;
+        const refreshButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_REFRESH.img_disabled;
         this.topologyTopToolbar.addButton(refreshButtonId, refreshButtonPosition, refreshButtonText, refreshButtonImgEnabled, refreshButtonImgDisabled);
         this.topologyTopToolbar.setItemToolTip(refreshButtonId, "Refresh");
 
         // Add save topology button
-        const saveTopologyButtonId = "refresh";
+        const saveTopologyButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_SAVE_TOPOLOGY.id;
         const saveTopologyButtonPosition = this.topItemsIndex++;
-        const saveTopologyButtonText = "";
-        const saveTopologyButtonImgEnabled = "/res/icons/Save-Topology.png";
-        const saveTopologyButtonImgDisabled = "";
+        const saveTopologyButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_SAVE_TOPOLOGY.text;
+        const saveTopologyButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_SAVE_TOPOLOGY.img_enabled;
+        const saveTopologyButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_SAVE_TOPOLOGY.img_disabled;
         this.topologyTopToolbar.addButton(saveTopologyButtonId, saveTopologyButtonPosition, saveTopologyButtonText, saveTopologyButtonImgEnabled, saveTopologyButtonImgDisabled);
         this.topologyTopToolbar.setItemToolTip(saveTopologyButtonId, "Save Topology");
 
         this.topologyTopToolbar.addSeparator("afterGeneralButtonsSeparator", this.topItemsIndex++);
 
         // Add grid layout button
-        const gridLayoutButtonId = "applyGridLayout";
+        const gridLayoutButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_GRID_LAYOUT.id;
         const gridLayoutButtonPosition = this.topItemsIndex++;
-        const gridLayoutButtonText = "";
-        const gridLayoutButtonImgEnabled = "/res/icons/grid.png";
-        const gridLayoutButtonImgDisabled = "";
+        const gridLayoutButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_GRID_LAYOUT.text;
+        const gridLayoutButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_GRID_LAYOUT.img_enabled;
+        const gridLayoutButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_GRID_LAYOUT.img_disabled;
         this.topologyTopToolbar.addButton(gridLayoutButtonId, gridLayoutButtonPosition, gridLayoutButtonText, gridLayoutButtonImgEnabled, gridLayoutButtonImgDisabled);
         this.topologyTopToolbar.setItemToolTip(gridLayoutButtonId, "Grid Layout");
         this.topologyTopToolbar.addSeparator("afterLayoutButtonsSeparator", this.topItemsIndex++);
@@ -233,6 +267,7 @@ class Graph {
 
     populateGraph() {
         const columns = Math.floor(this.innerWidth / (this.nodeWidth + 100));
+        const rows = Math.floor(this.innerHeight / (this.nodeHeight + 100));
         this.topologyCell.progressOn();
         fetch(this.graphDataUrl)
             .then(res => res.json())
@@ -243,6 +278,7 @@ class Graph {
                 const layout = this.graph.layout({
                     name: 'grid',
                     cols: columns,
+                    rows : rows,
                     fit: false
                 });
                 layout.run();
