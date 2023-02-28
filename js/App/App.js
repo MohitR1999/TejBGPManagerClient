@@ -15,6 +15,12 @@ const SIDEBAR_CONFIG = {
             id : "bgp_config_grid",
             text : "BGP Configuration (Grid Structure)",
             icon : "res/icons/settings_ethernet_fill.svg",
+        },
+        
+        {
+            id : "graph_view",
+            text : "BGP Configuration (Graph View)",
+            icon : "res/icons/settings_ethernet_fill.svg",
             selected : true
         }
     ]
@@ -27,5 +33,6 @@ class App {
         this.bgpGridCell = this.sidebar.cells("bgp_config_grid");
         this.bgpTree = new BGPTree(this.bgpTreeCell);
         this.bgpGrid = new BGPGrid(this.bgpGridCell);
+        this.graphView = new GraphView(this.sidebar.cells("graph_view"));
     }
 }

@@ -8,7 +8,7 @@ html, body {
     width: 100%;
 }
 
-#treeGraph {
+#treeGraph, #graphView, #slider {
     width: 100%;
     height: 100%;
 }
