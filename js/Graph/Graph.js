@@ -33,6 +33,20 @@ class Graph {
                 text : "",
                 img_enabled : "/res/icons/grid.png",
                 img_disabled : ""
+            },
+
+            BTN_APPLY_RANDOM_LAYOUT : {
+                id : "applyRandomLayout",
+                text : "",
+                img_enabled : "/res/icons/dots.png",
+                img_disabled : ""
+            },
+
+            BTN_APPLY_CIRCULAR_LAYOUT : {
+                id : "applyCircularLayout",
+                text : "",
+                img_enabled : "/res/icons/rec.png",
+                img_disabled : ""
             }
         }
         this.layout = parentLayoutCell.attachLayout({
@@ -110,7 +124,7 @@ class Graph {
             pixelRatio: 1,
             wheelSensitivity: 0.50,
             fit: false,
-            minZoom: 0.50,
+            minZoom: 0.25,
             maxZoom: 3,
             layout: {
                 name: 'grid',
@@ -174,6 +188,33 @@ class Graph {
     topologyTopToolbarOnClickHandler(id) {
         if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_REFRESH.id) {
             this.populateGraph();
+        } else if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_GRID_LAYOUT.id) {
+            // Apply grid layout here
+            const columns = Math.floor(this.innerWidth / (this.nodeWidth + 100));
+            const rows = Math.floor(this.innerHeight / (this.nodeHeight + 100));
+            const layout = {
+                name: 'grid',
+                cols: columns,
+                rows : rows,
+                fit: false,
+            }
+            this.applyLayout(layout);
+        } else if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_RANDOM_LAYOUT.id) {
+            const layout = {
+                name : 'random',
+                fit : false,
+            }
+            this.applyLayout(layout);
+        } else if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_CIRCULAR_LAYOUT.id) {
+            const layout = {
+                name : 'circle',
+                fit : true,
+                avoidOverlap : true,
+                nodeDimensionsIncludeLabels : true,
+                spacingFactor : 1,
+                radius : Math.floor(this.innerWidth / 50)
+            }
+            this.applyLayout(layout);
         }
     }
 
@@ -239,6 +280,25 @@ class Graph {
         const gridLayoutButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_GRID_LAYOUT.img_disabled;
         this.topologyTopToolbar.addButton(gridLayoutButtonId, gridLayoutButtonPosition, gridLayoutButtonText, gridLayoutButtonImgEnabled, gridLayoutButtonImgDisabled);
         this.topologyTopToolbar.setItemToolTip(gridLayoutButtonId, "Grid Layout");
+
+        // Add circular layout button
+        const circularLayoutButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_CIRCULAR_LAYOUT.id;
+        const circularLayoutButtonPosition = this.topItemsIndex++;
+        const circularLayoutButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_CIRCULAR_LAYOUT.text;
+        const circularLayoutButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_CIRCULAR_LAYOUT.img_enabled;
+        const circularLayoutButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_CIRCULAR_LAYOUT.img_disabled;
+        this.topologyTopToolbar.addButton(circularLayoutButtonId, circularLayoutButtonPosition, circularLayoutButtonText, circularLayoutButtonImgEnabled, circularLayoutButtonImgDisabled);
+        this.topologyTopToolbar.setItemToolTip(circularLayoutButtonId, "Circular Layout");
+        
+        // Add random layout button
+        const randomLayoutButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_RANDOM_LAYOUT.id;
+        const randomLayoutButtonPosition = this.topItemsIndex++;
+        const randomLayoutButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_RANDOM_LAYOUT.text;
+        const randomLayoutButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_RANDOM_LAYOUT.img_enabled;
+        const randomLayoutButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_APPLY_RANDOM_LAYOUT.img_disabled;
+        this.topologyTopToolbar.addButton(randomLayoutButtonId, randomLayoutButtonPosition, randomLayoutButtonText, randomLayoutButtonImgEnabled, randomLayoutButtonImgDisabled);
+        this.topologyTopToolbar.setItemToolTip(randomLayoutButtonId, "Random Layout");
+
         this.topologyTopToolbar.addSeparator("afterLayoutButtonsSeparator", this.topItemsIndex++);
 
     }
@@ -287,5 +347,14 @@ class Graph {
                 console.log(err);
                 this.topologyCell.progressOff();
             })
+    }
+
+    /**
+     * Applies a layout on the graph
+     * @param {Object} layoutConfig The layout config which you want to apply on graph 
+     */
+    applyLayout(layoutConfig) {
+        const layout = this.graph.layout(layoutConfig);
+        layout.run();
     }
 }
