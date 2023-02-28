@@ -128,7 +128,25 @@ class Graph {
         this.layout.setSeparatorSize(0, 0);
         this.topItemsIndex = 0;
         this.bottomItemsIndex = 0;
+        this.layout.attachEvent("onPanelResizeFinish", this.layoutPanelsResizeHandler.bind(this));
+        this.layout.attachEvent("onResizeFinish", this.layoutResizeHandler.bind(this));
         this.init();
+    }
+
+    layoutPanelsResizeHandler(names) {
+        console.log('Panels Resize finished');
+    }
+    
+    layoutResizeHandler() {
+        console.log('Layout resize finished');
+        this.innerWidth = this.layout.base.clientWidth;
+        this.innerHeight = this.layout.base.clientHeight;
+        if (this.bottomToolbarCell && this.topologyBottomToolbar) {
+            // Bottom toolbar cell has been created so we can safely proceed with resizing
+            if (this.bottomToolbarCell.getHeight() != this.topologyBottomToolbar.cont.clientHeight) {
+                this.bottomToolbarCell.setHeight(this.topologyBottomToolbar.cont.clientHeight);
+            } else return;
+        }
     }
 
     /**
@@ -222,6 +240,22 @@ class Graph {
                 }
             ]
         });
+        this.graph.on('resize', this.graphResizeEventHandler.bind(this));
+    }
+
+    graphResizeEventHandler(event) {
+        const newWidth = this.topologyCell.cell.clientWidth;
+        const newHeight = this.topologyCell.cell.clientHeight;
+        const columns = Math.floor(newWidth / (this.nodeWidth + 100));
+        const rows = Math.floor(newHeight / (this.nodeHeight + 100));
+        const layout = {
+            name: 'grid',
+            cols: columns,
+            rows : rows,
+            fit : false,
+            animate : true
+        };
+        this.applyLayout(layout);
     }
 
     /**
