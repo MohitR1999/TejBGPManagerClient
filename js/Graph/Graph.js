@@ -11,8 +11,15 @@ class Graph {
         // attach the cytoscape.js graph. We will only assign values here
         // We will populate the cells in init function
         this.context = context;
+        this.layout = parentLayoutCell.attachLayout({
+            pattern: "2E"
+        });
         this.nodeWidth = 50;
         this.nodeHeight = 50;
+        // storing the width and height of the inner element
+        // for proper height and width adjustment
+        this.innerWidth = this.layout.base.clientWidth;
+        this.innerHeight = this.layout.base.clientHeight;
         this.TOOLBAR_ITEMS_CONFIG = {
             BTN_REFRESH : {
                 id : "refresh",
@@ -47,15 +54,57 @@ class Graph {
                 text : "",
                 img_enabled : "/res/icons/rec.png",
                 img_disabled : ""
+            },
+
+            TEXTBOX_FIND : {
+                id : "find_label",
+                text : "Find: "
+            },
+
+            INPUT_FIND : {
+                id : "find_input",
+                value : "",
+                width : this.innerWidth * 0.15
+            },
+
+            BTN_FIND : {
+                id : "find_button",
+                text : "",
+                img_enabled : "/res/icons/magnifying-glass.png",
+                img_disabled : "",
+                tooltip : "Search"
+            },
+
+            BTN_RESET_ZOOM : {
+                id : "reset_zoom",
+                text : "Reset",
+                img_enabled : "",
+                img_disabled : "",
+                tooltip : "Reset Zoom"
+            },
+
+            BTN_SELECT_FIND : {
+                id : "find_select",
+                text : "By",
+                opts : [
+                    [
+                        'find_by_ip',
+                        'obj',
+                        'By IP Address',
+                        '/res/icons/ip-address.png'
+                    ],
+
+                    [
+                        'find_by_label',
+                        'obj',
+                        'By Node Label',
+                        '/res/icons/tag.png'
+                    ]
+                ],
+                img_enabled : '',
+                img_disabled : ''
             }
         }
-        this.layout = parentLayoutCell.attachLayout({
-            pattern: "2E"
-        });
-        // storing the width and height of the inner element
-        // for proper height and width adjustment
-        this.innerWidth = this.layout.base.clientWidth;
-        this.innerHeight = this.layout.base.clientHeight;
         this.topologyParentDivId = parentID;
         // cells of the topology view
         this.topologyCell = this.layout.cells("a");
@@ -245,6 +294,14 @@ class Graph {
         const maxText = "➕";
         const tip = "<b>Zoom level</b>: %v";
         this.topologyBottomToolbar.addSlider(sliderId, pos, len, minValue, maxValue, nowValue, minText, maxText, tip);
+        
+        const resetButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_RESET_ZOOM.id;
+        const resetButtonPosition = this.bottomItemsIndex++;
+        const resetButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_RESET_ZOOM.text;
+        const resetButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_RESET_ZOOM.img_enabled;
+        const resetButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_RESET_ZOOM.img_disabled;
+        this.topologyBottomToolbar.addButton(resetButtonId, resetButtonPosition, resetButtonText, resetButtonImgEnabled, resetButtonImgDisabled);
+        
         this.topologyBottomToolbar.addSeparator("afterZoomSeparator", this.bottomItemsIndex++);
     }
 
@@ -304,24 +361,37 @@ class Graph {
     }
 
     initTopologyFindControls() {
-        const findTextBoxId = "find_label";
+        // Add find label
+        const findTextBoxId = this.TOOLBAR_ITEMS_CONFIG.TEXTBOX_FIND.id;
         const findTextBoxPosition = this.bottomItemsIndex++;
-        const findTextBoxText = "Find: ";
+        const findTextBoxText = this.TOOLBAR_ITEMS_CONFIG.TEXTBOX_FIND.text;
         this.topologyBottomToolbar.addText(findTextBoxId, findTextBoxPosition, findTextBoxText);
 
-        const findInputId = "find_input";
-        const findInputPosition = this.bottomItemsIndex++;
-        const findInputValue = "";
-        const findInputWidth = this.innerWidth * 0.20;
-        this.topologyBottomToolbar.addInput(findInputId, findInputPosition, findInputValue, findInputWidth);
+        // Add filter select
+        const filterId = this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.id;
+        const filterPosition = this.bottomItemsIndex++;
+        const filterText = this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.text;
+        const filterOpts = this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.opts;
+        const filterImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.img_enabled;
+        const filterImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.img_disabled;
+        this.topologyBottomToolbar.addButtonSelect(filterId, filterPosition, filterText, filterOpts, filterImgEnabled, filterImgDisabled, true, true, null, "select");
+        this.topologyBottomToolbar.setListOptionSelected(this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.id, this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.opts[1][0]);
 
-        const findButtonId = "find_button";
+         // Add input box
+         const findInputId = this.TOOLBAR_ITEMS_CONFIG.INPUT_FIND.id;
+         const findInputPosition = this.bottomItemsIndex++;
+         const findInputValue = this.TOOLBAR_ITEMS_CONFIG.INPUT_FIND.value;
+         const findInputWidth = this.TOOLBAR_ITEMS_CONFIG.INPUT_FIND.width;
+         this.topologyBottomToolbar.addInput(findInputId, findInputPosition, findInputValue, findInputWidth);
+
+        // Add search button
+        const findButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_FIND.id;
         const findButtonPosition = this.bottomItemsIndex++;
-        const findButtonText = "";
-        const findButtonImgEnabled = "/res/icons/magnifying-glass.png";
-        const findButtonImgDisabled = "";
+        const findButtonText = this.TOOLBAR_ITEMS_CONFIG.BTN_FIND.text;
+        const findButtonImgEnabled = this.TOOLBAR_ITEMS_CONFIG.BTN_FIND.img_enabled;
+        const findButtonImgDisabled = this.TOOLBAR_ITEMS_CONFIG.BTN_FIND.img_disabled;
         this.topologyBottomToolbar.addButton(findButtonId, findButtonPosition, findButtonText, findButtonImgEnabled, findButtonImgDisabled);
-        this.topologyBottomToolbar.setItemToolTip(findButtonId, "Search");
+        this.topologyBottomToolbar.setItemToolTip(findButtonId, this.TOOLBAR_ITEMS_CONFIG.BTN_FIND.tooltip);
         this.topologyBottomToolbar.addSeparator("afterFindBoxSeparator", this.bottomItemsIndex++);
     }
 

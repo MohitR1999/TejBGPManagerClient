@@ -1,4 +1,4 @@
-const BASE_IP = '192.168.1.8';
+const BASE_IP = '192.168.1.10';
 const SERVER_PORT = 7000;
 const SOCKET_PORT = 7001;
 const BASE_SERVER_URL = `http://${BASE_IP}:${SERVER_PORT}`;
