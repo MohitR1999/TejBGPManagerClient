@@ -312,7 +312,29 @@ class Graph {
         this.initTopologyFindControls();
         // adding zoom controls
         this.initTopologyZoomSlider();
+
+        // adding event handler
+        this.topologyBottomToolbar.attachEvent("onClick", this.topologyBottomToolbarOnClickHandler.bind(this));
     }
+
+    topologyBottomToolbarOnClickHandler(id) {
+        if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_FIND.id) {
+            const queryType = this.topologyBottomToolbar.getListOptionSelected(this.TOOLBAR_ITEMS_CONFIG.BTN_SELECT_FIND.id);
+            const text = this.topologyBottomToolbar.getInput(this.TOOLBAR_ITEMS_CONFIG.INPUT_FIND.id).value;
+            this.graph.nodes('*').unselect();
+            if (queryType === "find_by_ip") {
+                const query = `#${text}`;
+                const node = this.graph.nodes(query);
+                this.graph.fit(node);
+                node.select();
+            } else if (queryType === "find_by_label") {
+                const query = `[label = "${text}"]`;
+                const node = this.graph.nodes(query);
+                this.graph.fit(node);
+                node.select();
+            }
+        }
+    }    
 
     /**
      * Responsible for initializing the zoom slider
