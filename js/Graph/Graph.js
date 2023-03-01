@@ -16,6 +16,10 @@ class Graph {
         });
         this.nodeWidth = 50;
         this.nodeHeight = 50;
+        this.sliderMin = -19;
+        this.sliderMax = 50;
+        this.zoomMin = 0.25;
+        this.zoomMax = 3;
         // storing the width and height of the inner element
         // for proper height and width adjustment
         this.innerWidth = this.layout.base.clientWidth;
@@ -103,6 +107,17 @@ class Graph {
                 ],
                 img_enabled : '',
                 img_disabled : ''
+            },
+
+            SLIDER_ZOOM : {
+                id : "zoomSlider",
+                length : this.innerWidth * 0.15,
+                minValue : this.sliderMin,
+                maxValue : this.sliderMax,
+                nowValue : 0,
+                minText : "-",
+                maxText : "+",
+                tip : null
             }
         }
         this.topologyParentDivId = parentID;
@@ -241,6 +256,7 @@ class Graph {
             ]
         });
         this.graph.on('resize', this.graphResizeEventHandler.bind(this));
+        this.graph.on('zoom', this.graphZoomEventHandler.bind(this));
     }
 
     graphResizeEventHandler(event) {
@@ -256,6 +272,12 @@ class Graph {
             animate : true
         };
         this.applyLayout(layout);
+    }
+
+    graphZoomEventHandler(event) {
+        const zoomLevel = this.graph.zoom();
+        const sliderValue = this.sliderMin + ((this.sliderMax - this.sliderMin)/(this.zoomMax - this.zoomMin)) * (zoomLevel - this.zoomMin);
+        this.topologyBottomToolbar.setValue(this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.id, sliderValue, false);
     }
 
     /**
@@ -315,6 +337,7 @@ class Graph {
 
         // adding event handler
         this.topologyBottomToolbar.attachEvent("onClick", this.topologyBottomToolbarOnClickHandler.bind(this));
+        this.topologyBottomToolbar.attachEvent("onValueChange", this.topologyBottomSliderValueChangeEventHandler.bind(this));
     }
 
     topologyBottomToolbarOnClickHandler(id) {
@@ -333,22 +356,32 @@ class Graph {
                 this.graph.fit(node);
                 node.select();
             }
+        } else if (id === this.TOOLBAR_ITEMS_CONFIG.BTN_RESET_ZOOM.id) {
+            this.topologyBottomToolbar.setValue(this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.id, 0, true);
         }
     }    
+
+    topologyBottomSliderValueChangeEventHandler(id, value) {
+        if (id === this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.id) {
+            const zoomValue = this.zoomMin + ((this.zoomMax - this.zoomMin) / (this.sliderMax - this.sliderMin)) * (value - this.sliderMin);
+            console.log(zoomValue);
+            this.graph.zoom(zoomValue);
+        }    
+    }
 
     /**
      * Responsible for initializing the zoom slider
      */
     initTopologyZoomSlider() {
-        const sliderId = "zoomSlider";
+        const sliderId = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.id;
         const pos = this.bottomItemsIndex++;
-        const len = this.innerWidth * 0.15;
-        const minValue = -50;
-        const maxValue = 50;
-        const nowValue = 0;
-        const minText = "➖";
-        const maxText = "➕";
-        const tip = "<b>Zoom level</b>: %v";
+        const len = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.length;
+        const minValue = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.minValue;
+        const maxValue = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.maxValue;
+        const nowValue = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.nowValue;
+        const minText = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.minText;
+        const maxText = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.maxText;
+        const tip = this.TOOLBAR_ITEMS_CONFIG.SLIDER_ZOOM.tip;
         this.topologyBottomToolbar.addSlider(sliderId, pos, len, minValue, maxValue, nowValue, minText, maxText, tip);
         
         const resetButtonId = this.TOOLBAR_ITEMS_CONFIG.BTN_RESET_ZOOM.id;
